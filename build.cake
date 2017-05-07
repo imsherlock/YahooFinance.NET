@@ -40,6 +40,52 @@ Task("Test")
     XUnit2(buildTestDir.ToString() + "/*.Tests.dll");
 });
 
+Task("CleanupOldNugetPackages")
+    .Does(() =>
+{
+    var oldPackages = GetFiles("YahooFinance.NET*.nupkg");
+    foreach(var file in oldPackages)
+    {
+        DeleteFile(file);
+    }
+});
+
+Task("CreateNugetPackage")
+    .IsDependentOn("Test")
+    .IsDependentOn("CleanupOldNugetPackages")
+    .Does(() =>
+{
+    var projectFile = new FilePath(@"YahooFinance.NET\YahooFinance.NET.csproj"); 
+
+    var nuGetPackSettings = new NuGetPackSettings {
+        Symbols = false,
+        Properties = new Dictionary<string, string>
+        {
+            { "Configuration", configuration },
+        }
+    };
+
+    NuGetPack(projectFile, nuGetPackSettings); 
+});
+
+Task("Deploy")
+    .IsDependentOn("CreateNugetPackage")
+    .Does(() =>
+{
+    var packages = GetFiles("YahooFinance.NET*.nupkg");
+
+    Information("Deploying the following files...");
+    foreach(var file in packages)
+    {
+        Information("File: {0}", file);
+    }
+
+    //This will fail unless the NuGet API Key is set
+    //nuget.exe setApiKey <API-Key> -Source https://www.nuget.org/api/v2/package
+    NuGetPush(packages, new NuGetPushSettings {
+        Source = "https://www.nuget.org/api/v2/package",
+    });
+});
 
 Task("Default")
     .IsDependentOn("Test");
