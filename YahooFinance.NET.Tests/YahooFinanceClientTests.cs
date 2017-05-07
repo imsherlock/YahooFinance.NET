@@ -22,7 +22,20 @@ namespace YahooFinance.NET.Tests
 			List<YahooHistoricalDividendData> yahooDividendHistory = yahooFinance.GetHistoricalDividendData(yahooStockCode);
 		}
 
-		[Fact]
+	    [Fact]
+	    public void TestRealtimeData()
+	    {
+	        var exchange = "ASX";
+	        var symbol = "AFI";
+
+	        var yahooFinance = new YahooFinanceClient();
+	        var yahooStockCode = yahooFinance.GetYahooStockCode(exchange, symbol);
+	        var yahooRealTimeData = yahooFinance.GetRealTimeData(yahooStockCode);
+
+	        Assert.Equal("AFI.AX", yahooRealTimeData.Symbol);
+	    }
+
+        [Fact]
 		public void TestDailyPriceHistoy()
 		{
 			var exchange = "ASX";
