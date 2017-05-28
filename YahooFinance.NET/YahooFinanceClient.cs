@@ -10,10 +10,10 @@ namespace YahooFinance.NET
 	public class YahooFinanceClient
 	{
 		private const string BaseUrl = "http://real-chart.finance.yahoo.com/table.csv?s=";
-	    private const string RealTimeUrl = "http://finance.yahoo.com/d/quotes.csv?s=";
-	    private const string RealTimeSuffix = "&f=abl1pohgt1nsv";
+		private const string RealTimeUrl = "http://finance.yahoo.com/d/quotes.csv?s=";
+		private const string RealTimeSuffix = "&f=abl1pohgt1nsv";
 
-        private enum HistoryType
+		private enum HistoryType
 		{
 			DividendHistory = 1,
 			Day,
@@ -27,12 +27,14 @@ namespace YahooFinance.NET
 			return exchangeHelper.GetYahooStockCode(exchange, code);
 		}
 
-		public List<YahooHistoricalPriceData> GetDailyHistoricalPriceData(string yahooStockCode, DateTime? startDate = null, DateTime? endDate = null)
+		public List<YahooHistoricalPriceData> GetDailyHistoricalPriceData(string yahooStockCode, DateTime? startDate = null,
+			DateTime? endDate = null)
 		{
 			return GetHistoricalPriceData(yahooStockCode, HistoryType.Day, startDate, endDate);
 		}
 
-		public List<YahooHistoricalPriceData> GetWeeklyHistoricalPriceData(string yahooStockCode, DateTime? startDate = null, DateTime? endDate = null)
+		public List<YahooHistoricalPriceData> GetWeeklyHistoricalPriceData(string yahooStockCode, DateTime? startDate = null,
+			DateTime? endDate = null)
 		{
 			return GetHistoricalPriceData(yahooStockCode, HistoryType.Week, startDate, endDate);
 		}
@@ -117,41 +119,41 @@ namespace YahooFinance.NET
 			return historicalDataCsv;
 		}
 
-	    public YahooRealTimeData GetRealTimeData(string yahooStockCode)
-	    {
-	        var RealTimeDataCsv = GetRealTimeDataAsCsv(yahooStockCode);
+		public YahooRealTimeData GetRealTimeData(string yahooStockCode)
+		{
+			var RealTimeDataCsv = GetRealTimeDataAsCsv(yahooStockCode);
 
 
-            var values = RealTimeDataCsv.Replace("\"", "").Split(',');
+			var values = RealTimeDataCsv.Replace("\"", "").Split(',');
 
 
-            var realTimeData = new YahooRealTimeData
-                {
-                    Ask = decimal.Parse(values[0], CultureInfo.InvariantCulture),
-                    Bid = decimal.Parse(values[1], CultureInfo.InvariantCulture),
-                    Last = decimal.Parse(values[2], CultureInfo.InvariantCulture),
-                    PreviousClose = decimal.Parse(values[3], CultureInfo.InvariantCulture),
-                    Open = decimal.Parse(values[4], CultureInfo.InvariantCulture),
-	                High = decimal.Parse(values[5], CultureInfo.InvariantCulture),
-	                Low = decimal.Parse(values[6], CultureInfo.InvariantCulture),
-                    LastTradeTime = DateTime.Parse(values[7], CultureInfo.InvariantCulture),
-                    Name = values[8], 
-                    Symbol = values[9],
-	                Volume = long.Parse(values[10], CultureInfo.InvariantCulture),
-                };
+			var realTimeData = new YahooRealTimeData
+			{
+				Ask = decimal.Parse(values[0], CultureInfo.InvariantCulture),
+				Bid = decimal.Parse(values[1], CultureInfo.InvariantCulture),
+				Last = decimal.Parse(values[2], CultureInfo.InvariantCulture),
+				PreviousClose = decimal.Parse(values[3], CultureInfo.InvariantCulture),
+				Open = decimal.Parse(values[4], CultureInfo.InvariantCulture),
+				High = decimal.Parse(values[5], CultureInfo.InvariantCulture),
+				Low = decimal.Parse(values[6], CultureInfo.InvariantCulture),
+				LastTradeTime = DateTime.Parse(values[7], CultureInfo.InvariantCulture),
+				Name = values[8],
+				Symbol = values[9],
+				Volume = long.Parse(values[10], CultureInfo.InvariantCulture),
+			};
 
-	        return realTimeData;
-        }
+			return realTimeData;
+		}
 
-        private string GetRealTimeDataAsCsv(string yahooStockCode)
-	    {
+		private string GetRealTimeDataAsCsv(string yahooStockCode)
+		{
 
-	        var realTimeDataCsv = YahooRealTimeApiRequest(yahooStockCode);
+			var realTimeDataCsv = YahooRealTimeApiRequest(yahooStockCode);
 
-	        return realTimeDataCsv;
-	    }
+			return realTimeDataCsv;
+		}
 
-        private string YahooApiRequest(string yahooStockCode, string options)
+		private string YahooApiRequest(string yahooStockCode, string options)
 		{
 			var requestUrl = $"{BaseUrl}{yahooStockCode}{options}";
 
@@ -170,27 +172,28 @@ namespace YahooFinance.NET
 				}
 			}
 		}
-	    private string YahooRealTimeApiRequest(string yahooStockCode)
-	    {
-	        var requestUrl = $"{RealTimeUrl}{yahooStockCode}{RealTimeSuffix}";
 
-	        using (var client = new HttpClient())
-	        {
-	            using (var response = client.GetAsync(requestUrl).Result)
-	            {
-	                var realTimeData = response.Content.ReadAsStringAsync().Result;
+		private string YahooRealTimeApiRequest(string yahooStockCode)
+		{
+			var requestUrl = $"{RealTimeUrl}{yahooStockCode}{RealTimeSuffix}";
 
-	                if (response.IsSuccessStatusCode)
-	                {
-	                    return realTimeData;
-	                }
+			using (var client = new HttpClient())
+			{
+				using (var response = client.GetAsync(requestUrl).Result)
+				{
+					var realTimeData = response.Content.ReadAsStringAsync().Result;
 
-	                return string.Empty;
-	            }
-	        }
-	    }
+					if (response.IsSuccessStatusCode)
+					{
+						return realTimeData;
+					}
 
-        private string GetHistoryType(HistoryType type)
+					return string.Empty;
+				}
+			}
+		}
+
+		private string GetHistoryType(HistoryType type)
 		{
 			var optionCode = string.Empty;
 			switch (type)
