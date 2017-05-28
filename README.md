@@ -17,4 +17,5 @@ YahooFinanceClient yahooFinance = new YahooFinanceClient();
 string yahooStockCode = yahooFinance.GetYahooStockCode(exchange, symbol);
 List<YahooHistoricalPriceData> yahooPriceHistory = yahooFinance.GetDailyHistoricalPriceData(yahooStockCode);
 List<YahooHistoricalDividendData> yahooDividendHistory = yahooFinance.GetHistoricalDividendData(yahooStockCode);
+YahooRealTimeData yahooRealTimeData = yahooFinance.GetRealTimeData(yahooStockCode);
 ```
