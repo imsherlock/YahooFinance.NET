@@ -2,16 +2,20 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 
 namespace YahooFinance.NET
 {
 	public class YahooFinanceClient
 	{
-		private const string BaseUrl = "http://real-chart.finance.yahoo.com/table.csv?s=";
+		private const string BaseUrl = "https://query1.finance.yahoo.com/";
+		private const string BasePath = "v7/finance/download/";
 		private const string RealTimeUrl = "http://finance.yahoo.com/d/quotes.csv?s=";
 		private const string RealTimeSuffix = "&f=abl1pohgt1nsv";
+
+		private string Cookie = string.Empty;
+		private string Crumb = string.Empty;
 
 		private enum HistoryType
 		{
@@ -19,6 +23,12 @@ namespace YahooFinance.NET
 			Day,
 			Week,
 			Month,
+		}
+
+		public YahooFinanceClient(string cookie, string crumb)
+		{
+			Cookie = cookie;
+			Crumb = crumb;
 		}
 
 		public string GetYahooStockCode(string exchange, string code)
@@ -90,8 +100,8 @@ namespace YahooFinance.NET
 					High = decimal.Parse(values[2], CultureInfo.InvariantCulture),
 					Low = decimal.Parse(values[3], CultureInfo.InvariantCulture),
 					Close = decimal.Parse(values[4], CultureInfo.InvariantCulture),
-					Volume = long.Parse(values[5], CultureInfo.InvariantCulture),
-					AdjClose = decimal.Parse(values[6], CultureInfo.InvariantCulture)
+					AdjClose = decimal.Parse(values[5], CultureInfo.InvariantCulture),
+					Volume = long.Parse(values[6], CultureInfo.InvariantCulture),
 				};
 				historicalPriceData.Add(newPriceData);
 			}
@@ -155,20 +165,26 @@ namespace YahooFinance.NET
 
 		private string YahooApiRequest(string yahooStockCode, string options)
 		{
-			var requestUrl = $"{BaseUrl}{yahooStockCode}{options}";
+			var baseAddress = new Uri(BaseUrl);
 
-			using (var client = new HttpClient())
+			var requestUrl = $"{BasePath}{yahooStockCode}?{options}&crumb={Crumb}";
+			var cookieContainer = new CookieContainer();
+			cookieContainer.Add(baseAddress, new Cookie("B", Cookie));
+
+			using (var handler = new HttpClientHandler() { UseCookies = true, CookieContainer = cookieContainer })
 			{
-				using (var response = client.GetAsync(requestUrl).Result)
+				using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
 				{
-					var historicalData = response.Content.ReadAsStringAsync().Result;
-
-					if (response.IsSuccessStatusCode)
+					using (var response = client.GetAsync(requestUrl).Result)
 					{
-						return historicalData;
-					}
+						if (response.IsSuccessStatusCode)
+						{
+							var result = response.Content.ReadAsStringAsync().Result;
+							return result;
+						}
 
-					return string.Empty;
+						return string.Empty;
+					}
 				}
 			}
 		}
@@ -199,51 +215,29 @@ namespace YahooFinance.NET
 			switch (type)
 			{
 				case HistoryType.DividendHistory:
-					optionCode = "v";
+					optionCode = "1d&events=dividends";
 					break;
 				case HistoryType.Day:
-					optionCode = "d";
+					optionCode = "1d&events=history";
 					break;
 				case HistoryType.Week:
-					optionCode = "w";
+					optionCode = "1wk&events=history";
 					break;
 				case HistoryType.Month:
-					optionCode = "m";
+					optionCode = "1mo&events=history";
 					break;
 			}
 
-			var option = $"&g={optionCode}";
+			var option = $"&interval={optionCode}";
 			return option;
 		}
 
-		private string GetDateRangeOption(DateTime startDate, DateTime endDate)
+		private string GetDateRangeOption(DateTimeOffset startDate, DateTimeOffset endDate)
 		{
-			var start = $"{GetStartDate(startDate)}";
-			var end = $"{GetEndDate(endDate)}";
+			var start = startDate.ToUnixTimeSeconds();
+			var end = endDate.ToUnixTimeSeconds();
 
-			var option = $"{start}{end}";
-			return option;
-		}
-
-		private string GetStartDate(DateTime date)
-		{
-			// API uses zero-based month numbering
-			var month = $"&a={date.Month - 1}";
-			var day = $"&b={date.Day}";
-			var year = $"&c={date.Year}";
-
-			var option = $"{month}{day}{year}";
-			return option;
-		}
-
-		private string GetEndDate(DateTime date)
-		{
-			// API uses zero-based month numbering
-			var month = $"&d={date.Month - 1}";
-			var day = $"&e={date.Day}";
-			var year = $"&f={date.Year}";
-
-			var option = $"{month}{day}{year}";
+			var option = $"period1={start}&period2={end}";
 			return option;
 		}
 	}
