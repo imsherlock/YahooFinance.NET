@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace YahooFinance.NET
 {
-	internal class YahooExchangeHelper
+	public class YahooExchangeHelper
 	{
 		public string GetYahooStockCode(string exchange, string code)
 		{
