@@ -2,7 +2,6 @@
 
 namespace YahooFinance.NET
 {
-	[Serializable]
 	public class YahooRealTimeData
 	{
 		public decimal Ask { get; set; }
